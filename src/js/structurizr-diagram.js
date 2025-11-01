@@ -5028,7 +5028,7 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
             }
         };
 
-        img.src = 'data:image/svg+xml;base64,' + btoa(svgMarkup);
+        img.src = 'data:image/svg+xml;base64,' + structurizr.util.btoa(svgMarkup);
     }
 
 
