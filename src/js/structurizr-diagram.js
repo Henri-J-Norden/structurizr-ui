@@ -4976,7 +4976,7 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
     }
 
     function convertDiagramToPNG(includeDiagramMetadata, crop, callback) {
-        var svgMarkup = self.exportCurrentDiagramToSVG(includeDiagramMetadata, false);
+        var svgMarkup = self.exportCurrentDiagramToSVG(includeDiagramMetadata);
 
         var contentArea;
         if (crop === true) {
@@ -5032,7 +5032,7 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
     }
 
 
-    this.exportCurrentDiagramToSVG = function(includeDiagramMetadata, includeFont) {
+    this.exportCurrentDiagramToSVG = function(includeDiagramMetadata) {
         var currentScale = scale;
         this.zoomTo(1.0);
 
@@ -5046,11 +5046,9 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
         svgMarkup = svgMarkup.substring(svgMarkup.indexOf(">") +1 );
 
         var font = '';
-        if (includeFont === true) {
-            const branding = structurizr.ui.getBranding();
-            if (branding.font.url) {
-                font = '<defs><style>@import url(' + branding.font.url + ');</style></defs>';
-            }
+        const branding = structurizr.ui.getBranding();
+        if (branding.font.url) {
+            font = '<defs><style>@import url(' + branding.font.url + ');</style></defs>';
         }
 
         svgMarkup = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 ' + diagramWidth + ' ' + diagramHeight + '" style="background: ' + canvasColor + '">' + font + svgMarkup;
@@ -5076,15 +5074,13 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
         return svgMarkup;
     };
 
-    this.exportCurrentDiagramKeyToSVG = function(includeFont) {
+    this.exportCurrentDiagramKeyToSVG = function() {
         var svgMarkup = diagramKey;
 
         var font = '';
-        if (includeFont === true) {
-            const branding = structurizr.ui.getBranding();
-            if (branding.font.url) {
-                font = '<defs><style>@import url(' + branding.font.url + ');</style></defs>';
-            }
+        const branding = structurizr.ui.getBranding();
+        if (branding.font.url) {
+            font = '<defs><style>@import url(' + branding.font.url + ');</style></defs>';
         }
 
         var diagramKeyWidth = svgMarkup.match(/width="(\d*)"/)[1];
