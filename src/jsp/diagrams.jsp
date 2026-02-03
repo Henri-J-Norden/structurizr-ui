@@ -452,7 +452,7 @@
         if (view.type === "Dynamic" || (view.animations && view.animations.length > 1)) {
             $('.dynamicDiagramButton').removeClass("hidden");
 
-            $('.stepBackwardAnimationButton').attr("disabled", true);
+            $('.stepBackwardAnimationButton').attr("disabled", false);
             $('.startAnimationButton').attr("disabled", false);
             $('.stopAnimationButton').attr("disabled", true);
             $('.stepForwardAnimationButton').attr("disabled", false);
@@ -1559,7 +1559,7 @@
     }
 
     function animationStopped() {
-        $('.stepBackwardAnimationButton').prop("disabled", true);
+        $('.stepBackwardAnimationButton').prop("disabled", false);
         $('.startAnimationButton').prop("disabled", false);
         $('.stopAnimationButton').attr("disabled", true);
     }
