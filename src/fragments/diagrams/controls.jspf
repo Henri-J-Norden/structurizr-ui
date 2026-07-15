@@ -19,9 +19,11 @@
             <button id="homeButton" class="btn btn-default" title="Home"><img src="${structurizrConfiguration.cdnUrl}/bootstrap-icons/house.svg" class="icon-btn" /></button>
             <script nonce="${scriptNonce}">$('#homeButton').click(function() { window.location.href='/'; });</script>
             </c:if>
+            <button id="upOneLevelButton" class="btn btn-default" title="Go up one level [g]" disabled="true"><img src="${structurizrConfiguration.cdnUrl}/bootstrap-icons/arrow-up.svg" class="icon-btn" /></button>
             <button id="backButton" class="btn btn-default backButton" title="Go back to the last viewed diagram [b]"><img src="${structurizrConfiguration.cdnUrl}/bootstrap-icons/arrow-90deg-left.svg" class="icon-btn" /></button>
         </div>
         <script nonce="${scriptNonce}">
+            $('#upOneLevelButton').click(function() { upOneLevel(); });
             $('#backButton').click(function() { back(); });
         </script>
 

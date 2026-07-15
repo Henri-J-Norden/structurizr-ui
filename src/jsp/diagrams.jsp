@@ -399,6 +399,9 @@
         }
         $('.backButton').attr("disabled", viewsVisited.count() === 1);
 
+        const parentViews = structurizr.workspace.findParentViewsForView(view);
+        $('#upOneLevelButton').attr("disabled", parentViews.length === 0);
+
         selectDiagramByView(view);
         const editable = structurizr.diagram.isEditable();
 
@@ -621,6 +624,23 @@
         }
     }
 
+    function upOneLevel() {
+        const currentView = structurizr.diagram.getCurrentViewOrFilter();
+        const parentViews = structurizr.workspace.findParentViewsForView(currentView);
+
+        if (parentViews.length === 1) {
+            navigateTo('#' + parentViews[0].key);
+        } else if (parentViews.length > 1) {
+            const options = parentViews.map(function(view) {
+                return {
+                    value: '#' + view.key,
+                    label: structurizr.ui.getTitleForView(view) + ' (#' + view.key + ')'
+                };
+            });
+            openNavigationModal(options);
+        }
+    }
+
     function initThumbnails() {
         var html = '';
         var index = 1;
@@ -778,6 +798,7 @@
             const c = 99;
             const d = 100;
             const f = 102;
+            const g = 103;
             const h = 104;
             const i = 105;
             const j = 106;
@@ -894,6 +915,9 @@
                 return;
             } else if (e.which === b) {
                 back();
+                return;
+            } else if (e.which === g) {
+                upOneLevel();
                 return;
             } else if (e.which === l && structurizr.diagram.isEditable()) {
                 openAutoLayoutModal();

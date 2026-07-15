@@ -870,6 +870,47 @@ structurizr.Workspace = class Workspace {
         return views;
     };
 
+    findSystemLandscapeViews() {
+        const views = [];
+
+        for (var i = 0; i < this.#views.length; i++) {
+            var view = this.#views[i];
+
+            if (view.type === structurizr.constants.SYSTEM_LANDSCAPE_VIEW_TYPE) {
+                views.push(view);
+            } else if (view.type === structurizr.constants.FILTERED_VIEW_TYPE) {
+                var baseView = this.findViewByKey(view.baseViewKey);
+                if (baseView.type === structurizr.constants.SYSTEM_LANDSCAPE_VIEW_TYPE) {
+                    views.push(view);
+                }
+            }
+        }
+
+        return views;
+    };
+
+    findParentViewsForView(view) {
+        if (view.type === structurizr.constants.FILTERED_VIEW_TYPE) {
+            view = this.findViewByKey(view.baseViewKey);
+            if (view === undefined) {
+                return [];
+            }
+        }
+
+        if (view.type === structurizr.constants.COMPONENT_VIEW_TYPE) {
+            const container = this.findElementById(view.containerId);
+            if (container) {
+                return this.findContainerViewsForSoftwareSystem(container.parentId);
+            }
+        } else if (view.type === structurizr.constants.CONTAINER_VIEW_TYPE) {
+            return this.findSystemContextViewsForSoftwareSystem(view.softwareSystemId);
+        } else if (view.type === structurizr.constants.SYSTEM_CONTEXT_VIEW_TYPE) {
+            return this.findSystemLandscapeViews();
+        }
+
+        return [];
+    };
+
     findComponentViewsForContainer(containerId) {
         const views = [];
 
