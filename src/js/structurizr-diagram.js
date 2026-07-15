@@ -5230,10 +5230,57 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
         } else if (this.currentViewHasAnimation()) {
             animationStarted = true;
             fireAnimationStartedEvent();
-            animationSteps = currentView.animations;
+            animationSteps = currentView.animations.slice();
             animationSteps.sort(function (a, b) {
                 return a.order - b.order;
             });
+
+            // find elements and relationships not included in any animation step
+            var animatedElementIds = [];
+            var animatedRelationshipIds = [];
+            animationSteps.forEach(function(step) {
+                if (step.elements) {
+                    step.elements.forEach(function(id) {
+                        if (animatedElementIds.indexOf(id) === -1) {
+                            animatedElementIds.push(id);
+                        }
+                    });
+                }
+                if (step.relationships) {
+                    step.relationships.forEach(function(id) {
+                        if (animatedRelationshipIds.indexOf(id) === -1) {
+                            animatedRelationshipIds.push(id);
+                        }
+                    });
+                }
+            });
+
+            var nonAnimatedElementIds = [];
+            if (currentView.elements) {
+                currentView.elements.forEach(function(elementView) {
+                    if (animatedElementIds.indexOf(elementView.id) === -1) {
+                        nonAnimatedElementIds.push(elementView.id);
+                    }
+                });
+            }
+
+            var nonAnimatedRelationshipIds = [];
+            if (currentView.relationships) {
+                currentView.relationships.forEach(function(relationshipView) {
+                    if (animatedRelationshipIds.indexOf(relationshipView.id) === -1) {
+                        nonAnimatedRelationshipIds.push(relationshipView.id);
+                    }
+                });
+            }
+
+            // add an extra animation step for elements/relationships not included in any animation step
+            if (nonAnimatedElementIds.length > 0 || nonAnimatedRelationshipIds.length > 0) {
+                animationSteps.push({
+                    elements: nonAnimatedElementIds,
+                    relationships: nonAnimatedRelationshipIds
+                });
+            }
+
             animationIndex = 0;
 
             this.continueAnimation(autoPlay);
