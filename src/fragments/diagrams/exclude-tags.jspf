@@ -7,9 +7,13 @@
             </div>
             <div class="modal-body">
                 <p>
-                    The tags included in the software architecture model are listed below.
+                    The tags included in the current view are listed below.
                     Viewing a diagram with one or more tags selected will hide all elements and relationships with those tags.
                 </p>
+
+                <div class="form-group">
+                    <label><input type="checkbox" id="showAllExcludeTagsCheckbox" /> Show all tags (entire model)</label>
+                </div>
 
                 <div>
                     <div class="form-group">
@@ -29,10 +33,22 @@
 
     $('#clearExcludeTagsButton').click(function() { clearExcludeTags(true); });
     $('#viewExcludeTagsButton').click(function() { showExcludeTags(); });
+    $('#showAllExcludeTagsCheckbox').change(function() { populateExcludeTagsList(); });
 
-    function initExcludeTags() {
-        var tags = structurizr.workspace.getTags();
+    function getExcludeTagsForCurrentView() {
+        var view = structurizr.diagram.getCurrentViewOrFilter();
+        if (view) {
+            return structurizr.workspace.getTagsForView(view);
+        }
+        return structurizr.workspace.getTags();
+    }
+
+    function populateExcludeTagsList() {
+        var showAll = $('#showAllExcludeTagsCheckbox').is(':checked');
+        var tags = showAll ? structurizr.workspace.getTags() : getExcludeTagsForCurrentView();
         var excludeTagsList = $('#excludeTagsList');
+        var selected = excludeTagsList.val() || [];
+
         excludeTagsList.empty();
 
         tags.forEach(function(tag) {
@@ -41,11 +57,16 @@
             );
         });
 
+        excludeTagsList.val(selected);
         excludeTagsList.attr('size', Math.min(8, tags.length));
+    }
 
+    function initExcludeTags() {
+        populateExcludeTagsList();
     }
 
     function openExcludeTagsModal() {
+        populateExcludeTagsList();
         $('#excludeTagsModal').modal();
     }
 

@@ -417,6 +417,44 @@ structurizr.Workspace = class Workspace {
         return tags;
     };
 
+    getTagsForView(view) {
+        const self = this;
+        const tags = [];
+
+        if (view && view.elements) {
+            view.elements.forEach(function(elementInView) {
+                const element = self.findElementById(elementInView.id);
+                if (element) {
+                    const allTags = self.getAllTagsForElement(element);
+                    allTags.forEach(function(tag) {
+                        tag = structurizr.util.trim(tag);
+                        if (tag.length > 0 && tags.indexOf(tag) === -1) {
+                            tags.push(tag);
+                        }
+                    });
+                }
+            });
+        }
+
+        if (view && view.relationships) {
+            view.relationships.forEach(function(relationshipInView) {
+                const relationship = self.findRelationshipById(relationshipInView.id);
+                if (relationship) {
+                    const allTags = self.getAllTagsForRelationship(relationship);
+                    allTags.forEach(function(tag) {
+                        tag = structurizr.util.trim(tag);
+                        if (tag.length > 0 && tags.indexOf(tag) === -1) {
+                            tags.push(tag);
+                        }
+                    });
+                }
+            });
+        }
+
+        tags.sort();
+        return tags;
+    };
+
     getAllTagsForElement(element) {
         var tags = (element.tags ? element.tags : '');
 

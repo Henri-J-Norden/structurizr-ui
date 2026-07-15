@@ -7,9 +7,13 @@
             </div>
             <div class="modal-body">
                 <p>
-                    The tags included in the software architecture model are listed below.
+                    The tags included in the current view are listed below.
                     Viewing a diagram with one or more tags selected will highlight all elements and relationships with those tags.
                 </p>
+
+                <div class="form-group">
+                    <label><input type="checkbox" id="showAllTagsCheckbox" /> Show all tags (entire model)</label>
+                </div>
 
                 <div>
                     <div class="form-group">
@@ -29,10 +33,22 @@
 
     $('#clearTagsButton').click(function() { clearTags(true); });
     $('#viewTagsButton').click(function() { showTags(); });
+    $('#showAllTagsCheckbox').change(function() { populateTagsList(); });
 
-    function initTags() {
-        var tags = structurizr.workspace.getTags();
+    function getTagsForCurrentView() {
+        var view = structurizr.diagram.getCurrentViewOrFilter();
+        if (view) {
+            return structurizr.workspace.getTagsForView(view);
+        }
+        return structurizr.workspace.getTags();
+    }
+
+    function populateTagsList() {
+        var showAll = $('#showAllTagsCheckbox').is(':checked');
+        var tags = showAll ? structurizr.workspace.getTags() : getTagsForCurrentView();
         var tagsList = $('#tagsList');
+        var selected = tagsList.val() || [];
+
         tagsList.empty();
 
         tags.forEach(function(tag) {
@@ -41,11 +57,16 @@
             );
         });
 
+        tagsList.val(selected);
         tagsList.attr('size', Math.min(8, tags.length));
+    }
 
+    function initTags() {
+        populateTagsList();
     }
 
     function openTagsModal() {
+        populateTagsList();
         $('#tagsModal').modal();
     }
 
