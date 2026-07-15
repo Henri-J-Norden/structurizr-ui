@@ -358,28 +358,33 @@
             }
 
             const options = [];
-            var views = [];
+            var primaryViews = [];
+            var extraViews = [];
             if (element.type === structurizr.constants.SOFTWARE_SYSTEM_ELEMENT_TYPE) {
                 if (structurizr.diagram.getCurrentView().type === structurizr.constants.SYSTEM_LANDSCAPE_VIEW_TYPE || structurizr.diagram.getCurrentView().softwareSystemId !== element.id) {
-                    views = structurizr.workspace.findSystemContextViewsForSoftwareSystem(element.id);
-                    if (views.length === 0) {
-                        views = structurizr.workspace.findContainerViewsForSoftwareSystem(element.id);
-                    }
+                    primaryViews = structurizr.workspace.findSystemContextViewsForSoftwareSystem(element.id);
+                    extraViews = structurizr.workspace.findContainerViewsForSoftwareSystem(element.id)
+                        .concat(structurizr.workspace.findComponentViewsForSoftwareSystem(element.id));
                 } else if (structurizr.diagram.getCurrentView().type === structurizr.constants.SYSTEM_CONTEXT_VIEW_TYPE) {
-                    views = structurizr.workspace.findContainerViewsForSoftwareSystem(element.id);
+                    primaryViews = structurizr.workspace.findContainerViewsForSoftwareSystem(element.id);
+                    extraViews = structurizr.workspace.findComponentViewsForSoftwareSystem(element.id);
+                } else if (structurizr.diagram.getCurrentView().type === structurizr.constants.CONTAINER_VIEW_TYPE) {
+                    primaryViews = structurizr.workspace.findComponentViewsForSoftwareSystem(element.id);
                 }
             } else if (element.type === structurizr.constants.CONTAINER_ELEMENT_TYPE) {
-                views = structurizr.workspace.findComponentViewsForContainer(element.id);
+                primaryViews = structurizr.workspace.findComponentViewsForContainer(element.id);
             } else if (element.type === structurizr.constants.SOFTWARE_SYSTEM_INSTANCE_ELEMENT_TYPE) {
-                views = structurizr.workspace.findSystemContextViewsForSoftwareSystem(element.softwareSystemId);
+                primaryViews = structurizr.workspace.findSystemContextViewsForSoftwareSystem(element.softwareSystemId);
+                extraViews = structurizr.workspace.findContainerViewsForSoftwareSystem(element.softwareSystemId)
+                    .concat(structurizr.workspace.findComponentViewsForSoftwareSystem(element.softwareSystemId));
             } else if (element.type === structurizr.constants.CONTAINER_INSTANCE_ELEMENT_TYPE) {
-                views = structurizr.workspace.findComponentViewsForContainer(element.containerId);
+                primaryViews = structurizr.workspace.findComponentViewsForContainer(element.containerId);
             }
 
-            views = views.concat(structurizr.workspace.findDynamicViewsForElement(element.id));
-            views = views.concat(structurizr.workspace.findImageViewsForElement(element.id));
+            primaryViews = primaryViews.concat(structurizr.workspace.findDynamicViewsForElement(element.id));
+            primaryViews = primaryViews.concat(structurizr.workspace.findImageViewsForElement(element.id));
 
-            views.forEach(function(view) {
+            primaryViews.forEach(function(view) {
                 options.push({
                     value: '#' + view.key,
                     label: structurizr.ui.getTitleForView(view) + ' (#' + view.key + ')'
@@ -412,6 +417,13 @@
                     }
                 });
             }
+
+            extraViews.forEach(function(view) {
+                options.push({
+                    value: '#' + view.key,
+                    label: structurizr.ui.getTitleForView(view) + ' (#' + view.key + ')'
+                });
+            });
 
             if (options.length === 1) {
                 navigateTo(options[0].value);

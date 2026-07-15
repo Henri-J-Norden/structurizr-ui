@@ -1202,9 +1202,14 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
 
         if (element.type === structurizr.constants.SOFTWARE_SYSTEM_ELEMENT_TYPE) {
             if (currentView.type === structurizr.constants.SYSTEM_LANDSCAPE_VIEW_TYPE || currentView.softwareSystemId !== element.id) {
-                views = structurizr.workspace.findSystemContextViewsForSoftwareSystem(element.id).concat(structurizr.workspace.findContainerViewsForSoftwareSystem(element.id));
+                views = structurizr.workspace.findSystemContextViewsForSoftwareSystem(element.id)
+                    .concat(structurizr.workspace.findContainerViewsForSoftwareSystem(element.id))
+                    .concat(structurizr.workspace.findComponentViewsForSoftwareSystem(element.id));
             } else if (currentView.type === structurizr.constants.SYSTEM_CONTEXT_VIEW_TYPE) {
-                views = structurizr.workspace.findContainerViewsForSoftwareSystem(element.id);
+                views = structurizr.workspace.findContainerViewsForSoftwareSystem(element.id)
+                    .concat(structurizr.workspace.findComponentViewsForSoftwareSystem(element.id));
+            } else if (currentView.type === structurizr.constants.CONTAINER_VIEW_TYPE) {
+                views = structurizr.workspace.findComponentViewsForSoftwareSystem(element.id);
             }
         } else if (element.type === structurizr.constants.CONTAINER_ELEMENT_TYPE) {
             views = structurizr.workspace.findComponentViewsForContainer(element.id);

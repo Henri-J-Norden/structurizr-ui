@@ -847,6 +847,29 @@ structurizr.Workspace = class Workspace {
         return views;
     };
 
+    findComponentViewsForSoftwareSystem(softwareSystemId) {
+        const views = [];
+
+        Object.values(this.#elementsById).forEach(function(element) {
+            if (element.type === structurizr.constants.CONTAINER_ELEMENT_TYPE && element.parentId === softwareSystemId) {
+                for (var i = 0; i < this.#views.length; i++) {
+                    var view = this.#views[i];
+
+                    if (view.type === structurizr.constants.COMPONENT_VIEW_TYPE && view.containerId === element.id) {
+                        views.push(view);
+                    } else if (view.type === structurizr.constants.FILTERED_VIEW_TYPE) {
+                        var baseView = this.findViewByKey(view.baseViewKey);
+                        if (baseView.type === structurizr.constants.COMPONENT_VIEW_TYPE && baseView.containerId === element.id) {
+                            views.push(view);
+                        }
+                    }
+                }
+            }
+        }, this);
+
+        return views;
+    };
+
     findComponentViewsForContainer(containerId) {
         const views = [];
 
