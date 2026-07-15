@@ -1000,6 +1000,9 @@
 
         if (view) {
             changeView(view);
+            if (!window.location.hash) {
+                window.location.hash = encodeURIComponent(view.key);
+            }
         }
 
         window.onhashchange = function () {
