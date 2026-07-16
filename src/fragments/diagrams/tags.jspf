@@ -3,7 +3,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h2 class="modal-title">Tags</h2>
+                <h2 class="modal-title">Tags <button type="button" id="switchToExcludeTagsButton" class="btn btn-default" style="margin-left: 10px; font-size: 24px; padding: 8px 16px;">Exclude Tags &rarr;</button></h2>
             </div>
             <div class="modal-body">
                 <p>
@@ -13,6 +13,7 @@
 
                 <div class="form-group">
                     <label><input type="checkbox" id="showAllTagsCheckbox" /> Show all tags (entire model)</label>
+                    <label style="margin-left: 15px;"><input type="checkbox" id="previewTagsCheckbox" /> Preview</label>
                 </div>
 
                 <div>
@@ -34,6 +35,29 @@
     $('#clearTagsButton').click(function() { clearTags(true); });
     $('#viewTagsButton').click(function() { showTags(); });
     $('#showAllTagsCheckbox').change(function() { populateTagsList(); });
+    $('#previewTagsCheckbox').change(function() {
+        if ($(this).is(':checked')) {
+            $('#tagsModal .modal-content').css('opacity', '0.5');
+            showTags(true);
+        } else {
+            $('#tagsModal .modal-content').css('opacity', '');
+        }
+    });
+    $('#tagsList').change(function() {
+        if ($('#previewTagsCheckbox').is(':checked')) {
+            showTags(true);
+        }
+    });
+    $('#tagsModal').on('hidden.bs.modal', function() {
+        $('#previewTagsCheckbox').prop('checked', false);
+        $('#tagsModal .modal-content').css('opacity', '');
+    });
+    $('#switchToExcludeTagsButton').click(function() {
+        $('#previewTagsCheckbox').prop('checked', false);
+        $('#tagsModal .modal-content').css('opacity', '');
+        $('#tagsModal').modal('hide');
+        openExcludeTagsModal();
+    });
 
     function getTagsForCurrentView() {
         var view = structurizr.diagram.getCurrentViewOrFilter();
@@ -83,15 +107,18 @@
         }
     }
 
-    function showTags() {
+    function showTags(preview) {
         clearPerspective(false);
         var tags = $('#tagsList').val();
         structurizr.diagram.changeTags(tags);
         structurizr.diagram.renderPerspectiveOrTagsFilter();
 
-        $('#tagsModal').modal('hide');
         $('#tagsOnButton').addClass('hidden');
         $('#tagsOffButton').removeClass('hidden');
         $('#tagsOffButton').attr('title', 'Tags (' + tags + ')');
+
+        if (preview !== true) {
+            $('#tagsModal').modal('hide');
+        }
     }
 </script>

@@ -3,7 +3,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h2 class="modal-title">Exclude Tags</h2>
+                <h2 class="modal-title">Exclude Tags <button type="button" id="switchToTagsButton" class="btn btn-default" style="margin-left: 10px; font-size: 24px; padding: 8px 16px;">Tags &rarr;</button></h2>
             </div>
             <div class="modal-body">
                 <p>
@@ -13,6 +13,7 @@
 
                 <div class="form-group">
                     <label><input type="checkbox" id="showAllExcludeTagsCheckbox" /> Show all tags (entire model)</label>
+                    <label style="margin-left: 15px;"><input type="checkbox" id="previewExcludeTagsCheckbox" /> Preview</label>
                 </div>
 
                 <div>
@@ -34,6 +35,29 @@
     $('#clearExcludeTagsButton').click(function() { clearExcludeTags(true); });
     $('#viewExcludeTagsButton').click(function() { showExcludeTags(); });
     $('#showAllExcludeTagsCheckbox').change(function() { populateExcludeTagsList(); });
+    $('#previewExcludeTagsCheckbox').change(function() {
+        if ($(this).is(':checked')) {
+            $('#excludeTagsModal .modal-content').css('opacity', '0.5');
+            showExcludeTags(true);
+        } else {
+            $('#excludeTagsModal .modal-content').css('opacity', '');
+        }
+    });
+    $('#excludeTagsList').change(function() {
+        if ($('#previewExcludeTagsCheckbox').is(':checked')) {
+            showExcludeTags(true);
+        }
+    });
+    $('#excludeTagsModal').on('hidden.bs.modal', function() {
+        $('#previewExcludeTagsCheckbox').prop('checked', false);
+        $('#excludeTagsModal .modal-content').css('opacity', '');
+    });
+    $('#switchToTagsButton').click(function() {
+        $('#previewExcludeTagsCheckbox').prop('checked', false);
+        $('#excludeTagsModal .modal-content').css('opacity', '');
+        $('#excludeTagsModal').modal('hide');
+        openTagsModal();
+    });
 
     function getExcludeTagsForCurrentView() {
         var view = structurizr.diagram.getCurrentViewOrFilter();
@@ -83,15 +107,18 @@
         }
     }
 
-    function showExcludeTags() {
+    function showExcludeTags(preview) {
         clearPerspective(false);
         var tags = $('#excludeTagsList').val();
         structurizr.diagram.changeExcludeTags(tags);
         structurizr.diagram.renderPerspectiveOrTagsFilter();
 
-        $('#excludeTagsModal').modal('hide');
         $('#excludeTagsOnButton').addClass('hidden');
         $('#excludeTagsOffButton').removeClass('hidden');
         $('#excludeTagsOffButton').attr('title', 'Exclude Tags (' + tags + ')');
+
+        if (preview !== true) {
+            $('#excludeTagsModal').modal('hide');
+        }
     }
 </script>
