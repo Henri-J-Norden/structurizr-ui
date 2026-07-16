@@ -58,7 +58,7 @@
     <div id="tooltipAuthor"><img src="${structurizrConfiguration.cdnUrl}/bootstrap-icons/person.svg" class="icon-sm icon-white" /> <span id="tooltipAuthorName"></span></div>
 </div>
 
-<div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal" id="commentModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-md">
         <div id="commentModalContent" class="modal-content">
             <div class="modal-body">

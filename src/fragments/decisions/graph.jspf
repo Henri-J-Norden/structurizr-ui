@@ -1,4 +1,4 @@
-<div class="modal fade" id="graphModal" tabindex="-1" role="dialog" aria-labelledby="informationModalLabel" aria-hidden="true">
+<div class="modal" id="graphModal" tabindex="-1" role="dialog" aria-labelledby="informationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div id="graphContent" class="modal-body">
