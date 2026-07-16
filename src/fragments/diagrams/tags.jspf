@@ -58,7 +58,7 @@
         });
 
         tagsList.val(selected);
-        tagsList.attr('size', Math.min(8, tags.length));
+        tagsList.attr('size', Math.min(20, tags.length));
     }
 
     function initTags() {

@@ -58,7 +58,7 @@
         });
 
         excludeTagsList.val(selected);
-        excludeTagsList.attr('size', Math.min(8, tags.length));
+        excludeTagsList.attr('size', Math.min(20, tags.length));
     }
 
     function initExcludeTags() {
