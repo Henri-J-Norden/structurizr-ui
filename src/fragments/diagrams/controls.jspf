@@ -91,11 +91,30 @@
         <script nonce="${scriptNonce}">$('#saveButton').click(function() { saveWorkspace(); });</script>
         </c:if>
 
-        <c:if test="${includeEditButton eq true}">
+        <c:if test="${workspace.editable}">
         <div id="editDiagramButton" class="btn-group">
-            <button class="btn btn-primary" title="Edit diagram"><img src="${structurizrConfiguration.cdnUrl}/bootstrap-icons/pencil.svg" class="icon-btn icon-white" /></button>
+            <button class="btn btn-default" title="Enable editing"><img src="${structurizrConfiguration.cdnUrl}/bootstrap-icons/pencil.svg" class="icon-btn" /></button>
         </div>
-        <script nonce="${scriptNonce}">$('#editDiagramButton').click(function() { window.location.href='/workspace/${workspace.id}/diagram-editor<c:out value="${urlSuffix}" escapeXml="false" />#' + window.location.hash.substring(1); });</script>
+        <script nonce="${scriptNonce}">
+            $('#editDiagramButton').click(function() {
+                structurizr.diagram.toggleEditMode();
+                if (structurizr.diagram.isEditModeEnabled()) {
+                    $('#editDiagramButton button').removeClass('btn-default').addClass('btn-primary');
+                    $('#editDiagramButton img').addClass('icon-white');
+                    $('#editDiagramButton').attr('title', 'Disable editing');
+                    $('#diagramEditButtons').removeClass('hidden');
+                    $('#autoLayoutButton').prop('disabled', false);
+                    getPageSizeDropDown().prop('disabled', false);
+                } else {
+                    $('#editDiagramButton button').removeClass('btn-primary').addClass('btn-default');
+                    $('#editDiagramButton img').removeClass('icon-white');
+                    $('#editDiagramButton').attr('title', 'Enable editing');
+                    $('#diagramEditButtons').addClass('hidden');
+                    $('#autoLayoutButton').prop('disabled', true);
+                    getPageSizeDropDown().prop('disabled', true);
+                }
+            });
+        </script>
         </c:if>
     </div>
 </div>

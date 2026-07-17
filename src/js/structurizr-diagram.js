@@ -29,6 +29,7 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
     var lasso;
 
     var editable = diagramIsEditable;
+    var editModeEnabled = false;
     var embedded = false;
     var keyboardShortcutsEnabled = true;
     var navigationEnabled = false;
@@ -405,11 +406,14 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
             return;
         }
 
+        // reset edit mode on each view render (editing must be explicitly enabled)
+        editModeEnabled = false;
+
         // make the diagram non-editable if auto-layout algorithm is specified
         if (view.automaticLayout !== undefined) {
             editable = false;
         } else {
-            editable = diagramIsEditable;
+            editable = diagramIsEditable && editModeEnabled;
         }
 
         paper.setInteractivity(function(cellView) {
@@ -1595,6 +1599,28 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
 
     this.isEditable = function() {
         return editable;
+    };
+
+    this.isWorkspaceEditable = function() {
+        return diagramIsEditable;
+    };
+
+    this.isEditModeEnabled = function() {
+        return editModeEnabled;
+    };
+
+    this.setEditMode = function(enabled) {
+        if (!diagramIsEditable) return;
+        if (currentView && currentView.automaticLayout !== undefined) return;
+
+        editModeEnabled = (enabled === true);
+        editable = diagramIsEditable && editModeEnabled;
+
+        updateInteractivity();
+    };
+
+    this.toggleEditMode = function() {
+        this.setEditMode(!editModeEnabled);
     };
 
     this.setEmbedded = function(bool) {
@@ -6311,6 +6337,48 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
             repositionLasso();
         }
     };
+
+    function updateInteractivity() {
+        paper.setInteractivity(function(cellView) {
+            if (cellView.model.isLink()) {
+                return {
+                    vertexAdd: false,
+                    vertexMove: true
+                }
+            }
+            return editable;
+        });
+
+        graph.getElements().forEach(function(cell) {
+            var cellView = paper.findViewByModel(cell);
+            if (cellView) {
+                $('#' + cellView.id).attr('style', 'cursor: ' + (editable ? 'move' : 'default') + ' !important');
+            }
+        });
+
+        if (editable) {
+            $('.connection-wrap').css({
+                'pointer-events': '',
+                'cursor': ''
+            });
+            $('.marker-vertices').css('display', '');
+        } else {
+            $('.connection-wrap').css({
+                'pointer-events': 'visiblePainted',
+                'cursor': 'auto'
+            });
+            $('.marker-vertices').css('display', 'none');
+        }
+
+        disableCanvasDragging();
+        if (!editable) {
+            enableCanvasDragging();
+        }
+
+        if (!editable) {
+            self.deselectAllElements();
+        }
+    }
 
     function enableCanvasDragging() {
         viewport.css('cursor', 'grabbing');

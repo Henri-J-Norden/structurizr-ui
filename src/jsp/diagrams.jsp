@@ -504,10 +504,18 @@
         if (structurizr.diagram.getCurrentView().automaticLayout !== undefined) {
             $('#editDiagramButton').addClass('hidden');
             $('#diagramNotEditableMessage').removeClass('hidden');
-        } else {
+        } else if (structurizr.diagram.isWorkspaceEditable()) {
             $('#editDiagramButton').removeClass('hidden');
             $('#diagramNotEditableMessage').addClass('hidden');
+        } else {
+            $('#editDiagramButton').addClass('hidden');
+            $('#diagramNotEditableMessage').addClass('hidden');
         }
+
+        // reset edit toggle button to off state (edit mode is disabled on view change)
+        $('#editDiagramButton button').removeClass('btn-primary').addClass('btn-default');
+        $('#editDiagramButton img').removeClass('icon-white');
+        $('#editDiagramButton').attr('title', 'Enable editing');
 
         structurizr.diagram.resize();
         structurizr.diagram.zoomToWidthOrHeight();
