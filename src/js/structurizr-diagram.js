@@ -1028,7 +1028,9 @@ structurizr.ui.Diagram = function(id, diagramIsEditable, constructionCompleteCal
             return false;
         }
 
-        if (view.type === structurizr.constants.SYSTEM_LANDSCAPE_VIEW_TYPE || view.type === structurizr.constants.SYSTEM_CONTEXT_VIEW_TYPE) {
+        if (view.type === structurizr.constants.CUSTOM_VIEW_TYPE) {
+            renderGroupForElement = true;
+        } else if (view.type === structurizr.constants.SYSTEM_LANDSCAPE_VIEW_TYPE || view.type === structurizr.constants.SYSTEM_CONTEXT_VIEW_TYPE) {
             renderGroupForElement = (element.type === structurizr.constants.PERSON_ELEMENT_TYPE || element.type === structurizr.constants.SOFTWARE_SYSTEM_ELEMENT_TYPE || element.type === structurizr.constants.CUSTOM_ELEMENT_TYPE);
         } else if (view.type === structurizr.constants.CONTAINER_VIEW_TYPE) {
             renderGroupForElement = element.type === structurizr.constants.CONTAINER_ELEMENT_TYPE;
