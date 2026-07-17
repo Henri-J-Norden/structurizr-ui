@@ -443,7 +443,7 @@
 
     function navigateToPreviousDiagram() {
         const currentView = structurizr.diagram.getCurrentViewOrFilter();
-        const views = structurizr.workspace.getViews();
+        const views = structurizr.workspace.getViews().filter(function(v) { return !structurizr.workspace.isViewHidden(v); });
 
         var index = views.indexOf(currentView);
         if (index > 0) {
@@ -453,7 +453,7 @@
 
     function navigateToNextDiagram() {
         const currentView = structurizr.diagram.getCurrentViewOrFilter();
-        const views = structurizr.workspace.getViews();
+        const views = structurizr.workspace.getViews().filter(function(v) { return !structurizr.workspace.isViewHidden(v); });
 
         var index = views.indexOf(currentView);
         if (index < views.length -1) {
@@ -562,6 +562,7 @@
 
     function initQuickNavigation() {
         structurizr.workspace.getViews().forEach(function(view) {
+            if (structurizr.workspace.isViewHidden(view)) return;
             const title = structurizr.util.escapeHtml(structurizr.ui.getTitleForView(view));
             quickNavigation.addItem(title + ' <span class="viewKey">(#' + structurizr.util.escapeHtml(view.key) + ')</span>', '#' + structurizr.util.escapeHtml(view.key));
         });

@@ -595,6 +595,7 @@
             $('.diagramThumbnail').removeClass('diagramThumbnailActive');
             var index = 1;
             views.forEach(function (v) {
+                if (structurizr.workspace.isViewHidden(v)) return;
                 if (view.key === v.key) {
                     const thumbnail = $('#diagram' + index + 'Thumbnail');
                     thumbnail.addClass('diagramThumbnailActive');
@@ -648,6 +649,7 @@
         var html = '';
         var index = 1;
         views.forEach(function(view) {
+            if (structurizr.workspace.isViewHidden(view)) return;
             viewKeys.push(view.key);
             var id = 'diagram' + index;
             var title = structurizr.util.escapeHtml(structurizr.ui.getTitleForView(view));
@@ -681,6 +683,7 @@
 
         index = 1;
         views.forEach(function(view) {
+            if (structurizr.workspace.isViewHidden(view)) return;
             document.getElementById('diagram' + index + 'Thumbnail').onclick = function() {
                 window.location.hash = encodeURIComponent(view.key);
             };
@@ -694,6 +697,7 @@
         viewsDropDown.empty();
 
         views.forEach(function(view) {
+            if (structurizr.workspace.isViewHidden(view)) return;
             viewsDropDown.append(
                 $('<option></option>').val(structurizr.util.escapeHtml(view.key)).html(structurizr.util.escapeHtml(structurizr.ui.getTitleForView(view)))
             );
@@ -955,19 +959,21 @@
 
     function navigateToPreviousDiagram() {
         const currentView = structurizr.diagram.getCurrentViewOrFilter();
+        const visibleViews = views.filter(function(v) { return !structurizr.workspace.isViewHidden(v); });
 
-        var index = views.indexOf(currentView);
+        var index = visibleViews.indexOf(currentView);
         if (index > 0) {
-            window.location.hash = '#' + views[index-1].key;
+            window.location.hash = '#' + visibleViews[index-1].key;
         }
     }
 
     function navigateToNextDiagram() {
         const currentView = structurizr.diagram.getCurrentViewOrFilter();
+        const visibleViews = views.filter(function(v) { return !structurizr.workspace.isViewHidden(v); });
 
-        var index = views.indexOf(currentView);
-        if (index < views.length -1) {
-            window.location.hash = '#' + views[index+1].key;
+        var index = visibleViews.indexOf(currentView);
+        if (index < visibleViews.length -1) {
+            window.location.hash = '#' + visibleViews[index+1].key;
         }
     }
 
@@ -1121,6 +1127,7 @@
 
     function initQuickNavigation() {
         views.forEach(function(view) {
+            if (structurizr.workspace.isViewHidden(view)) return;
             const title = structurizr.util.escapeHtml(structurizr.ui.getTitleForView(view));
             quickNavigation.addItem(title + ' <span class="viewKey">(#' + structurizr.util.escapeHtml(view.key) + ')</span>', '<c:out value="${urlPrefix}" />/${quickNavigationPath}<c:out value="${urlSuffix}" escapeXml="false" />#' + structurizr.util.escapeHtml(view.key));
         });

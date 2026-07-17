@@ -809,6 +809,20 @@ structurizr.Workspace = class Workspace {
         return this.#views;
     }
 
+    isViewHidden(view) {
+        if (view.properties && view.properties['structurizr.hide'] !== undefined) {
+            return view.properties['structurizr.hide'] === 'true';
+        }
+        if (this.#workspace.views.configuration.properties) {
+            var globalHide = this.#workspace.views.configuration.properties['structurizr.hide'];
+            if (globalHide !== undefined) {
+                var hiddenTypes = globalHide.split(',').map(function(t) { return t.trim(); });
+                return hiddenTypes.indexOf(view.type) !== -1;
+            }
+        }
+        return false;
+    }
+
     findSystemContextViewsForSoftwareSystem(softwareSystemId) {
         const views = [];
 

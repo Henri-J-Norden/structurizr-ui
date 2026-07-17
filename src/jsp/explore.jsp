@@ -26,6 +26,7 @@
             var html = '';
 
             views.forEach(function(view) {
+                if (structurizr.workspace.isViewHidden(view)) return;
                 var diagramUrl = '<c:out value="${urlPrefix}" />/diagrams<c:out value="${urlSuffix}" escapeXml="false" />#' + structurizr.util.escapeHtml(view.key);
                 var graphUrl;
                 var treeUrl;

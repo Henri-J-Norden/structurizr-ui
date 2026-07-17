@@ -100,6 +100,7 @@
         <c:otherwise>
         const views = structurizr.workspace.getViews();
         views.forEach(function(view) {
+            if (structurizr.workspace.isViewHidden(view)) return;
             if (
                 view.type === structurizr.constants.CUSTOM_VIEW_TYPE ||
                 view.type === structurizr.constants.SYSTEM_LANDSCAPE_VIEW_TYPE ||
