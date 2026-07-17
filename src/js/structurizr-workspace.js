@@ -976,7 +976,7 @@ structurizr.Workspace = class Workspace {
         var listOfViews = [];
         var filters = [];
 
-        var viewTypeOrders = [ 'SystemLandscape', 'SystemContext', 'Container', 'Component', 'Code', 'Dynamic', 'Deployment', 'Image' ];
+        var viewTypeOrders = [ 'SystemLandscape', 'SystemContext', 'Container', 'Component', 'Code', 'Dynamic', 'Deployment', 'Image', 'Custom' ];
         var elementTypeOrders = [ '*', 'SoftwareSystem', 'Container', 'Component' ];
 
         this.#allViews.forEach(function(view) {
