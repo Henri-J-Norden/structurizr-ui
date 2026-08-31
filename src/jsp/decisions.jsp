@@ -484,11 +484,14 @@
 
     function rewriteInternalWorkspaceLinks() {
         $('#decisionLogContent a').each(function () {
-            var href = $(this).attr('href');
-            href = decodeURIComponent(href);
+            var href = decodeURIComponent($(this).attr('href'));
             if (href.indexOf(structurizr.constants.INTRA_WORKSPACE_URL_PREFIX) === 0) {
-                // convert {workspace}/doc... to /workspace/1234/doc...
-                href = '<c:out value="${urlPrefix}" />' + href.substring(structurizr.constants.INTRA_WORKSPACE_URL_PREFIX.length) + '<c:out value="${urlSuffix}" escapeXml="false" />';
+                var rest = href.substring(structurizr.constants.INTRA_WORKSPACE_URL_PREFIX.length);
+                var hashIndex = rest.indexOf('#');
+                var path = hashIndex > -1 ? rest.substring(0, hashIndex) : rest;
+                var fragment = hashIndex > -1 ? rest.substring(hashIndex) : '';
+                // encode the path so spaces and other unsafe characters become percent-encoded
+                href = '<c:out value="${urlPrefix}" />' + encodeURI(path) + '<c:out value="${urlSuffix}" escapeXml="false" />' + fragment;
                 $(this).attr('href', href)
             }
         });

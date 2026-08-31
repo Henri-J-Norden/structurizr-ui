@@ -14,8 +14,44 @@
 <script nonce="${scriptNonce}">
     var node, link;
     var linkedById = {};
+    var allDecisionsByScopeAndId = {};
     var width, height;
     var simulation;
+
+    function buildAllDecisionsByScopeAndId() {
+        allDecisionsByScopeAndId = {};
+
+        function addDecisionsForElement(element, scope) {
+            if (element && element.documentation && element.documentation.decisions) {
+                element.documentation.decisions.forEach(function(decision) {
+                    allDecisionsByScopeAndId[scope + '/' + decision.id] = {
+                        decision: decision,
+                        scope: scope
+                    };
+                });
+            }
+        }
+
+        if (structurizr.workspace.model && structurizr.workspace.model.softwareSystems) {
+            structurizr.workspace.model.softwareSystems.forEach(function(softwareSystem) {
+                var softwareSystemScope = toScope(softwareSystem);
+                addDecisionsForElement(softwareSystem, softwareSystemScope);
+
+                if (softwareSystem.containers) {
+                    softwareSystem.containers.forEach(function(container) {
+                        var containerScope = toScope(container);
+                        addDecisionsForElement(container, containerScope);
+
+                        if (container.components) {
+                            container.components.forEach(function(component) {
+                                addDecisionsForElement(component, toScope(component));
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    }
 
     function neighboring(a, b) {
         return linkedById[a.id + "," + b.id] !== undefined;
@@ -41,23 +77,37 @@
 
         $(nodeClicked).css("stroke-width", "4px");
 
+        function getNodeId(scope, decisionId) {
+            return scope + '/' + decisionId;
+        }
+
+        function getTargetNodeId(link, sourceScope) {
+            return (link.scope ? link.scope : sourceScope) + '/' + link.id;
+        }
+
         var hasMore = true;
         var network = [];
-        network.push(d.decision.id);
+        network.push(d.id);
 
         while (hasMore) {
             hasMore = false;
 
-            decisions.forEach(function(decision) {
+            Object.keys(allDecisionsByScopeAndId).forEach(function(sourceNodeId) {
+                var decisionWithScope = allDecisionsByScopeAndId[sourceNodeId];
+                var decision = decisionWithScope.decision;
+                var sourceScope = decisionWithScope.scope;
+
                 if (decision.links) {
                     decision.links.forEach(function(link) {
-                        if (network.indexOf(decision.id) > -1 && network.indexOf(link.id) === -1) {
-                            network.push(link.id);
+                        var targetNodeId = getTargetNodeId(link, sourceScope);
+
+                        if (network.indexOf(sourceNodeId) > -1 && network.indexOf(targetNodeId) === -1) {
+                            network.push(targetNodeId);
                             hasMore = true;
                         }
 
-                        if (network.indexOf(link.id) > -1 && network.indexOf(decision.id) === -1) {
-                            network.push(decision.id);
+                        if (network.indexOf(targetNodeId) > -1 && network.indexOf(sourceNodeId) === -1) {
+                            network.push(sourceNodeId);
                             hasMore = true;
                         }
                     });
@@ -66,12 +116,12 @@
         }
 
         node.style("opacity", function(o) {
-            var currentOpacity = $('#element' + o.id).css('opacity');
+            var currentOpacity = d3.select(this).style('opacity');
             return network.indexOf(o.id) > -1 ? 1 : (reset === true ? 0.1 : currentOpacity);
         });
 
         link.style("opacity", function(o) {
-            var currentOpacity = $('#relationship' + o.id).css('opacity');
+            var currentOpacity = d3.select(this).style('opacity');
             return (network.indexOf(o.source.id) > -1 || network.indexOf(o.target.id) > -1) ? 1 : (reset === true ? 0.1 : currentOpacity);
         });
     }
@@ -79,14 +129,22 @@
     function click(event, d) {
         showConnectedNodes(this, true);
 
-        if (d.id > 0) {
-            window.location.hash = '#' + d.id;
+        if (d.decision) {
+            if (d.scope === requestedScope) {
+                window.location.hash = '#' + d.decision.id;
+            } else {
+                window.location.href = '<c:out value="${urlPrefix}" />/decisions/' + encodeURI(d.scope) + '<c:out value="${urlSuffix}" escapeXml="false" />#' + d.decision.id;
+            }
         }
     }
 
     function dblclick(event, d) {
-        if (d.id > 0) {
-            window.location.hash = '#' + d.id;
+        if (d.decision) {
+            if (d.scope === requestedScope) {
+                window.location.hash = '#' + d.decision.id;
+            } else {
+                window.location.href = '<c:out value="${urlPrefix}" />/decisions/' + encodeURI(d.scope) + '<c:out value="${urlSuffix}" escapeXml="false" />#' + d.decision.id;
+            }
             $('#graphModal').modal('hide');
         }
     }
@@ -157,7 +215,7 @@
 
             node.append("circle")
                 .attr("id", function (d) {
-                    return 'decision' + d.id;
+                    return 'decision' + d.id.replace(/\//g, '-');
                 })
                 .attr("r", '20')
                 .style("fill", function (d) {
@@ -176,6 +234,9 @@
                     }
 
                     return structurizr.util.shadeColor(color, -20);
+                })
+                .classed("external", function (d) {
+                    return d.scope && d.scope !== requestedScope;
                 });
 
             node.append("text")
@@ -271,7 +332,51 @@
             return undefined;
         }
 
+        buildAllDecisionsByScopeAndId();
+
         $('#graphButton').removeClass('hidden');
+
+        function getNodeId(scope, decisionId) {
+            return scope + '/' + decisionId;
+        }
+
+        function addNode(nodeId, name, description, status, decision, scope) {
+            if (nodesById[nodeId] === undefined) {
+                graph.nodes.push({
+                    id: nodeId,
+                    name: name,
+                    description: description,
+                    status: status,
+                    decision: decision,
+                    scope: scope
+                });
+                nodesById[nodeId] = true;
+            }
+        }
+
+        function addRootEdge(nodeId) {
+            if (!isLinked('root', nodeId)) {
+                registerLink('root', nodeId);
+                graph.links.push({
+                    id: 'root-' + nodeId,
+                    source: 'root',
+                    target: nodeId,
+                    description: ''
+                });
+            }
+        }
+
+        function addEdge(sourceNodeId, targetNodeId, description) {
+            if (!isLinked(sourceNodeId, targetNodeId)) {
+                registerLink(sourceNodeId, targetNodeId);
+                graph.links.push({
+                    id: sourceNodeId + '-' + targetNodeId,
+                    source: sourceNodeId,
+                    target: targetNodeId,
+                    description: description
+                });
+            }
+        }
 
         var rootNodeName = 'Decisions';
         var graph = { nodes: [
@@ -280,42 +385,58 @@
                     name: rootNodeName,
                     description: '',
                     status: undefined,
-                    decision: undefined
+                    decision: undefined,
+                    scope: undefined
                 }
             ], links: []};
+        var nodesById = {};
 
+        // First pass: add current-scope nodes and all outgoing edges
         decisions.forEach(function(decision) {
-            graph.nodes.push({
-                id: decision.id,
-                name: decision.title,
-                description: decision.description,
-                status: decision.status,
-                decision: decision
-            });
+            var nodeId = getNodeId(requestedScope, decision.id);
 
-            registerLink('root', decision.id);
-            registerLink(decision.id, decision.id); // this prevents the nodes in the graph linking to themselves
-
-            graph.links.push({
-                id: decision.id,
-                source: 'root',
-                target: decision.id,
-                description: ''
-            });
+            addNode(nodeId, decision.title, decision.description, decision.status, decision, requestedScope);
+            addRootEdge(nodeId);
+            if (!isLinked(nodeId, nodeId)) {
+                registerLink(nodeId, nodeId); // this prevents the nodes in the graph linking to themselves
+            }
 
             if (decision.links) {
                 decision.links.forEach(function(link) {
-                    var targetId = link.id;
+                    var targetScope = link.scope ? link.scope : requestedScope;
+                    var targetNodeId = getNodeId(targetScope, link.id);
+                    var targetDecisionWithScope = allDecisionsByScopeAndId[targetNodeId];
 
-                    if (!isLinked(decision.id, targetId)) {
-                        registerLink(decision.id, targetId);
+                    if (targetDecisionWithScope !== undefined) {
+                        var targetDecision = targetDecisionWithScope.decision;
+                        var targetScopeName = targetDecisionWithScope.scope;
+                        addNode(targetNodeId, targetDecision.title, targetDecision.description, targetDecision.status, targetDecision, targetScopeName);
+                        addRootEdge(targetNodeId);
+                        addEdge(nodeId, targetNodeId, link.description);
+                    }
+                });
+            }
+        });
 
-                        graph.links.push({
-                            id: decision.id + '-' + targetId,
-                            source: decision.id,
-                            target: targetId,
-                            description: link.description
-                        });
+        // Second pass: add incoming edges from other scopes
+        Object.keys(allDecisionsByScopeAndId).forEach(function(sourceNodeId) {
+            var decisionWithScope = allDecisionsByScopeAndId[sourceNodeId];
+            if (decisionWithScope.scope === requestedScope) {
+                // already handled in first pass
+                return;
+            }
+
+            var decision = decisionWithScope.decision;
+            if (decision.links) {
+                decision.links.forEach(function(link) {
+                    var targetScope = link.scope ? link.scope : decisionWithScope.scope;
+                    var targetNodeId = getNodeId(targetScope, link.id);
+
+                    // if this external decision links into the current scope, add the source and the edge
+                    if (targetScope === requestedScope && nodesById[targetNodeId] !== undefined) {
+                        addNode(sourceNodeId, decision.title, decision.description, decision.status, decision, decisionWithScope.scope);
+                        addRootEdge(sourceNodeId);
+                        addEdge(sourceNodeId, targetNodeId, link.description);
                     }
                 });
             }
@@ -326,13 +447,13 @@
 
     function highlightDecisionInGraph(decision) {
         if (node !== undefined) {
-            highlightNode(decision.id);
+            highlightNode(requestedScope + '/' + decision.id);
         }
     }
 
     function highlightNode(id) {
         node.filter(function (d) {
-            return d.decision !== undefined && d.decision.id === id;
+            return d.decision !== undefined && d.id === id;
         }).nodes().forEach(function (d, i) {
             showConnectedNodes(d, true);
         });
@@ -353,7 +474,11 @@
 
         var decision = d.decision;
         var style = getDecisionStyle(d);
-        tooltip.showTooltip(decision.id + '. ' + decision.title, '', '[' + decision.status + ']', style.background, style.color);
+        var title = decision.id + '. ' + decision.title;
+        if (d.scope && d.scope !== requestedScope) {
+            title = d.scope + ' / ' + title;
+        }
+        tooltip.showTooltip(title, '', '[' + decision.status + ']', style.background, style.color);
     }
 
     function showTooltipForLink(event, d) {
