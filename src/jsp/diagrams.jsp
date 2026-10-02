@@ -1181,20 +1181,15 @@
             if (element.type === structurizr.constants.SOFTWARE_SYSTEM_ELEMENT_TYPE) {
                 if (structurizr.diagram.getCurrentView().type === structurizr.constants.SYSTEM_LANDSCAPE_VIEW_TYPE || structurizr.diagram.getCurrentView().softwareSystemId !== element.id) {
                     primaryViews = structurizr.workspace.findSystemContextViewsForSoftwareSystem(element.id);
-                    extraViews = structurizr.workspace.findContainerViewsForSoftwareSystem(element.id)
-                        .concat(structurizr.workspace.findComponentViewsForSoftwareSystem(element.id));
+                    extraViews = structurizr.workspace.findContainerViewsForSoftwareSystem(element.id);
                 } else if (structurizr.diagram.getCurrentView().type === structurizr.constants.SYSTEM_CONTEXT_VIEW_TYPE) {
                     primaryViews = structurizr.workspace.findContainerViewsForSoftwareSystem(element.id);
-                    extraViews = structurizr.workspace.findComponentViewsForSoftwareSystem(element.id);
-                } else if (structurizr.diagram.getCurrentView().type === structurizr.constants.CONTAINER_VIEW_TYPE) {
-                    primaryViews = structurizr.workspace.findComponentViewsForSoftwareSystem(element.id);
                 }
             } else if (element.type === structurizr.constants.CONTAINER_ELEMENT_TYPE) {
                 primaryViews = structurizr.workspace.findComponentViewsForContainer(element.id);
             } else if (element.type === structurizr.constants.SOFTWARE_SYSTEM_INSTANCE_ELEMENT_TYPE) {
                 primaryViews = structurizr.workspace.findSystemContextViewsForSoftwareSystem(element.softwareSystemId);
-                extraViews = structurizr.workspace.findContainerViewsForSoftwareSystem(element.softwareSystemId)
-                    .concat(structurizr.workspace.findComponentViewsForSoftwareSystem(element.softwareSystemId));
+                extraViews = structurizr.workspace.findContainerViewsForSoftwareSystem(element.softwareSystemId);
             } else if (element.type === structurizr.constants.CONTAINER_INSTANCE_ELEMENT_TYPE) {
                 primaryViews = structurizr.workspace.findComponentViewsForContainer(element.containerId);
             }
@@ -1203,68 +1198,154 @@
             primaryViews = primaryViews.concat(structurizr.workspace.findImageViewsForElement(element.id));
 
             primaryViews.forEach(function(view) {
-                options.push({
-                    value: '#' + view.key,
-                    label: structurizr.ui.getTitleForView(view) + ' (#' + view.key + ')'
-                });
+                options.push(viewOption(view));
             });
 
-            if (element.documentation && element.documentation.sections && element.documentation.sections.length > 0) {
-                const documentationUrl = '<c:out value="${urlPrefix}" />/documentation/' + encodeURI(toScope(element)) + '<c:out value="${urlSuffix}" escapeXml="false" />';
-                options.push({
-                    value: documentationUrl,
-                    label: 'Documentation'
-                });
-            }
-
-            if (element.documentation && element.documentation.decisions && element.documentation.decisions.length > 0) {
-                const decisionsUrl = '<c:out value="${urlPrefix}" />/decisions/' + encodeURI(toScope(element)) + '<c:out value="${urlSuffix}" escapeXml="false" />';
-                options.push({
-                    value: decisionsUrl,
-                    label: 'Decisions'
-                });
-            }
-
-            if (elementUrl !== undefined) {
-                var label = elementUrl;
-                if (elementUrl.indexOf('#') === 0) {
-                    const key = elementUrl.substring(1);
-                    const view = structurizr.workspace.findViewByKey(key);
-                    if (view) {
-                        label = structurizr.ui.getTitleForView(view) + ' (#' + view.key + ')'
-                    }
-                }
-                options.push({
-                    value: elementUrl,
-                    label: label
-                });
-            }
-
-            if (element.properties) {
-                Object.keys(element.properties).forEach(function(name) {
-                    const value = element.properties[name];
-                    if (value.indexOf('http://') === 0 || value.indexOf('https://') === 0) {
-                        options.push({
-                            value: value,
-                            label: name
-                        })
-                    }
-                });
-            }
+            getElementLinks(element).forEach(function(link) {
+                options.push(link);
+            });
 
             extraViews.forEach(function(view) {
-                options.push({
-                    value: '#' + view.key,
-                    label: structurizr.ui.getTitleForView(view) + ' (#' + view.key + ')'
-                });
+                options.push(viewOption(view));
             });
 
-            if (options.length === 1) {
-                navigateTo(options[0].value);
+            appendDescendantLinks(options, buildDescendantLinkTree(getModelElement(element)));
+
+            const enabledOptions = options.filter(function(option) { return !option.disabled; });
+            if (enabledOptions.length === 1) {
+                navigateTo(enabledOptions[0].value);
             } else {
                 openNavigationModal(options);
             }
         }
+    }
+
+    function getModelElement(element) {
+        if (element.type === structurizr.constants.SOFTWARE_SYSTEM_INSTANCE_ELEMENT_TYPE) {
+            return structurizr.workspace.findElementById(element.softwareSystemId);
+        } else if (element.type === structurizr.constants.CONTAINER_INSTANCE_ELEMENT_TYPE) {
+            return structurizr.workspace.findElementById(element.containerId);
+        }
+
+        return element;
+    }
+
+    // documentation, decisions, url and URL properties of a single element
+    function getElementLinks(element) {
+        const links = [];
+
+        if (element.documentation && element.documentation.sections && element.documentation.sections.length > 0) {
+            links.push({
+                value: '<c:out value="${urlPrefix}" />/documentation/' + encodeURI(toScope(element)) + '<c:out value="${urlSuffix}" escapeXml="false" />',
+                label: 'Documentation'
+            });
+        }
+
+        if (element.documentation && element.documentation.decisions && element.documentation.decisions.length > 0) {
+            links.push({
+                value: '<c:out value="${urlPrefix}" />/decisions/' + encodeURI(toScope(element)) + '<c:out value="${urlSuffix}" escapeXml="false" />',
+                label: 'Decisions'
+            });
+        }
+
+        const elementUrl = processWorkspaceLink(element.url);
+        if (elementUrl !== undefined) {
+            var label = elementUrl;
+            if (elementUrl.indexOf('#') === 0) {
+                const view = structurizr.workspace.findViewByKey(elementUrl.substring(1));
+                if (view) {
+                    label = structurizr.ui.getTitleForView(view) + ' (#' + view.key + ')'
+                }
+            }
+            links.push({
+                value: elementUrl,
+                label: label
+            });
+        }
+
+        if (element.properties) {
+            Object.keys(element.properties).forEach(function(name) {
+                const value = element.properties[name];
+                if (value.indexOf('http://') === 0 || value.indexOf('https://') === 0) {
+                    links.push({
+                        value: value,
+                        label: name
+                    })
+                }
+            });
+        }
+
+        return links;
+    }
+
+    // views scoped to (or focused on) a single element
+    function getElementViews(element) {
+        var views = [];
+        if (element.type === structurizr.constants.CONTAINER_ELEMENT_TYPE) {
+            views = views.concat(structurizr.workspace.findComponentViewsForContainer(element.id));
+        }
+        views = views.concat(structurizr.workspace.findDynamicViewsForElement(element.id));
+        views = views.concat(structurizr.workspace.findImageViewsForElement(element.id));
+
+        return views.map(viewOption);
+    }
+
+    function viewOption(view) {
+        return {
+            value: '#' + view.key,
+            label: structurizr.ui.getTitleForView(view) + ' (#' + view.key + ')'
+        };
+    }
+
+    // builds a tree of descendants (containers/components) that have links, pruning empty branches
+    function buildDescendantLinkTree(element) {
+        const nodes = [];
+        (element.containers || element.components || []).forEach(function(child) {
+            const node = {
+                element: child,
+                links: getElementViews(child).concat(getElementLinks(child)),
+                children: buildDescendantLinkTree(child)
+            };
+            if (node.links.length > 0 || node.children.length > 0) {
+                nodes.push(node);
+            }
+        });
+
+        return nodes;
+    }
+
+    // appends descendant links, using box-drawing characters to show nesting depth
+    function appendDescendantLinks(options, tree) {
+        const nbsp = '\u00a0';
+
+        function render(nodes, indent, topLevel) {
+            nodes.forEach(function(node, nodeIndex) {
+                const lastNode = (nodeIndex === nodes.length - 1);
+                // top-level elements are unprefixed headings; everything inside them is nested
+                const branch = topLevel ? '' : indent + (lastNode ? '\u2514\u2500' : '\u251c\u2500') + nbsp;
+                const childIndent = topLevel ? '' : indent + (lastNode ? nbsp + nbsp + nbsp : '\u2502' + nbsp + nbsp);
+
+                options.push({
+                    value: '',
+                    label: branch + '[' + structurizr.util.escapeHtml(structurizr.workspace.getTerminologyFor(node.element)) + '] ' + structurizr.util.escapeHtml(node.element.name),
+                    disabled: true,
+                    className: 'navigationHeading navigationTreeItem' + (topLevel ? ' navigationTopHeading' : '')
+                });
+
+                node.links.forEach(function(link, linkIndex) {
+                    const lastEntry = (linkIndex === node.links.length - 1) && node.children.length === 0;
+                    options.push({
+                        value: link.value,
+                        label: childIndent + (lastEntry ? '\u2514\u2500' : '\u251c\u2500') + nbsp + link.label,
+                        className: 'navigationTreeItem'
+                    });
+                });
+
+                render(node.children, childIndent, false);
+            });
+        }
+
+        render(tree, '', true);
     }
 
     function toScope(element) {

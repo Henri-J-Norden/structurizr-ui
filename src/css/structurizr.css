@@ -514,8 +514,28 @@ hr {
     stroke-opacity: 0;
 }
 
+#navigationModal #navigationList {
+    height: auto;
+    max-height: 90vh;
+}
+
 #navigationModal option {
     padding: 5px;
+}
+
+#navigationModal option.navigationTreeItem {
+    padding: 0 5px;
+}
+
+#navigationModal option.navigationTopHeading {
+    padding-top: 5px;
+}
+
+#navigationModal option.navigationHeading {
+    color: #999999;
+    font-style: italic;
+    font-size: 80%;
+    cursor: default;
 }
 
 #quickFindModal .viewKey {

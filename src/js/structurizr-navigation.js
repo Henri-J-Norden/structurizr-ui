@@ -5,12 +5,13 @@ function openNavigationModal(options, handler) {
     if (options.length > 0) {
         options.forEach(function(option) {
             navigationList.append(
-                $('<option></option>').val(option.value).html(option.label)
+                $('<option></option>').val(option.value).html(option.label).prop('disabled', option.disabled === true).addClass(option.className || '')
             );
         });
 
-        navigationList.attr('size', Math.min(8, options.length));
-        navigationList.val(options[0].value);
+        navigationList.attr('size', Math.max(2, options.length));
+        const firstEnabled = options.filter(function(option) { return option.disabled !== true; })[0];
+        navigationList.val(firstEnabled ? firstEnabled.value : options[0].value);
 
         if (handler === undefined) {
             handler = navigateTo;
