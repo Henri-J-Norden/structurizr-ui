@@ -56,10 +56,17 @@ structurizr.ui.ContentRenderer = function(workspace, host, urlPrefix, safeMode) 
             });
 
             return '<div>' + content + '</div>';
+        } else if (token.info.trim() === 'mermaid') {
+            return renderMermaid(code);
         } else {
             return default_fenced_code_block_renderer(tokens, idx, options, env, self)
         }
     };
+
+    function renderMermaid(source) {
+        // rendered to SVG client-side by structurizr.ui.renderMermaidDiagrams() once added to the DOM
+        return '<pre class="mermaid">' + structurizr.util.escapeHtml(source) + '</pre>';
+    }
 
     function renderEmbeddedDiagram(diagramIdentifier) {
         var type = 'diagram';
@@ -188,6 +195,8 @@ structurizr.ui.ContentRenderer = function(workspace, host, urlPrefix, safeMode) 
         if (section.format && section.format === "AsciiDoc") {
 
             const inlinePassthroughRegex = /.*pass:.*\[/g;
+            const mermaidBlockRegex = /^\[mermaid.*]\s*$/;
+            const blockDelimiterRegex = /^(\.{4,}|-{4,})\s*$/;
 
             var preparsedContent = "";
             var lines = section.content.split('\n');
@@ -197,6 +206,16 @@ structurizr.ui.ContentRenderer = function(workspace, host, urlPrefix, safeMode) 
                     // skip passthroughs
                 } else if (safeMode && line.match(inlinePassthroughRegex)) {
                     preparsedContent += line.replaceAll(inlinePassthroughRegex, "[");
+                } else if (line.match(mermaidBlockRegex) && i + 1 < lines.length && lines[i + 1].match(blockDelimiterRegex)) {
+                    // [mermaid] followed by a literal (....) or listing (----) block
+                    var delimiter = lines[i + 1].trim();
+                    var source = [];
+                    i += 2;
+                    while (i < lines.length && lines[i].trim() !== delimiter) {
+                        source.push(lines[i]);
+                        i++;
+                    }
+                    preparsedContent += "++++\n" + renderMermaid(source.join('\n').trim()) + "\n++++";
                 } else if (line.startsWith("image::embed:")) {
                     var altTagStartIndex = line.indexOf("[");
                     var diagramIdentifier = line.substring("image::embed:".length, altTagStartIndex);
@@ -227,4 +246,22 @@ structurizr.ui.ContentRenderer = function(workspace, host, urlPrefix, safeMode) 
         }
     }
 
+};
+
+// renders any Mermaid diagrams (<pre class="mermaid">) inside the given container
+structurizr.ui.renderMermaidDiagrams = function(container) {
+    if (window.mermaid === undefined) {
+        return;
+    }
+
+    if (!structurizr.ui.mermaidInitialized) {
+        const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: darkMode ? 'dark' : 'default' });
+        structurizr.ui.mermaidInitialized = true;
+    }
+
+    const nodes = $(container).find('pre.mermaid:not([data-processed])').toArray();
+    if (nodes.length > 0) {
+        mermaid.run({ nodes: nodes, suppressErrors: true });
+    }
 };

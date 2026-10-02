@@ -4,6 +4,7 @@
 <script type="text/javascript" src="${structurizrConfiguration.cdnUrl}/js/structurizr-content${structurizrConfiguration.versionSuffix}.js"></script>
 <script type="text/javascript" src="${structurizrConfiguration.cdnUrl}/js/markdown-it-13.0.1.min.js"></script>
 <script type="text/javascript" src="${structurizrConfiguration.cdnUrl}/js/katex-0.16.4.min.js"></script>
+<script type="text/javascript" src="${structurizrConfiguration.cdnUrl}/js/mermaid-12.1.0.min.js"></script>
 <script type="text/javascript" src="${structurizrConfiguration.cdnUrl}/js/asciidoctor-2.2.6.min.js"></script>
 
 <link href="${structurizrConfiguration.cdnUrl}/css/katex-0.16.4.min.css" rel="stylesheet" media="screen" />
@@ -468,6 +469,7 @@
             const result = contentRenderer.render(decision);
             const html = '<div>' + result + '</div>';
             decisionLogContent.append(html);
+            structurizr.ui.renderMermaidDiagrams(decisionLogContent);
 
             $('#decisionLogContent h1').each(function () {
                 $(this).remove();

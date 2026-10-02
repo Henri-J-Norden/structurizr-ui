@@ -5,6 +5,7 @@
 <script type="text/javascript" src="${structurizrConfiguration.cdnUrl}/js/structurizr-documentation${structurizrConfiguration.versionSuffix}.js"></script>
 <script type="text/javascript" src="${structurizrConfiguration.cdnUrl}/js/markdown-it-13.0.1.min.js"></script>
 <script type="text/javascript" src="${structurizrConfiguration.cdnUrl}/js/katex-0.16.4.min.js"></script>
+<script type="text/javascript" src="${structurizrConfiguration.cdnUrl}/js/mermaid-12.1.0.min.js"></script>
 <script type="text/javascript" src="${structurizrConfiguration.cdnUrl}/js/asciidoctor-2.2.6.min.js"></script>
 
 <link href="${structurizrConfiguration.cdnUrl}/css/katex-0.16.4.min.css" rel="stylesheet" media="screen" />
@@ -548,6 +549,7 @@
             html += '<div class="documentationSectionContent">' + result + '</div>';
             html += '</div>';
             documentationContent.append(html);
+            structurizr.ui.renderMermaidDiagrams(documentationContent);
         }
 
         return section;
